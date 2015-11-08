@@ -55,12 +55,12 @@ func (tr *taskRunner) dowrite(r *PipelineRequest, flush bool) error {
 }
 
 func (tr *taskRunner) handleTask(r *PipelineRequest, flush bool) error {
-	if r == nil && flush { //just flush
+	if r == nil && flush { // Lius: only flush with no request data
 		return tr.c.Flush()
 	}
 
-	tr.tasks.PushBack(r) //Lius: buffered for next send
-	tr.latest = time.Now()
+	tr.tasks.PushBack(r)    // Lius: push to request queue for matching the response from backend
+	tr.latest = time.Now()  // Lius: mark send time for timeout check
 
 	return errors.Trace(tr.dowrite(r, flush))
 }
@@ -190,6 +190,7 @@ func (tr *taskRunner) writeloop() {
 		case resp := <-tr.out: // Lius: backend -> proxy (here)-> client
 			err = tr.handleResponse(resp)
 		case <-tick:
+            // Lius: reqeust send to backend has timeout
 			if tr.tasks.Len() > 0 && int(time.Since(tr.latest).Seconds()) > tr.netTimeout {
 				tr.c.Close()
 			}
