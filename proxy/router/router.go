@@ -213,6 +213,7 @@ func (s *Server) sendBack(c *session, op []byte, keys [][]byte, resp *parser.Res
 	c.backQ <- &PipelineResponse{ctx: pr, err: err, resp: resp}
 }
 
+// Lius: deal with a command, such as 'get key', 'mset k1 v1 k2 v2'
 func (s *Server) redisTunnel(c *session) error {
 	resp, op, keys, err := getRespOpKeys(c)
 	if err != nil {
